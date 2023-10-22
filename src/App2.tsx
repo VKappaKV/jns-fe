@@ -74,26 +74,38 @@ export default function App() {
     return <h2>Could not find a provider</h2>;
   }
 
+  //requires Uint8Array parameters
   const verifyEd25519Signature = (message, signature, publicKey) => {
-    const textEncoder = new TextEncoder();
-    const messageData = message;
     const signatureData = new Uint8Array(signature.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
     const publicKeyData = new Uint8Array(publicKey.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
-    return nacl.sign.detached.verify(messageData, signatureData, publicKeyData);
+    return nacl.sign.detached.verify(message, signatureData, publicKeyData);
   };
 
   const signMessage = async () => {
-    //console.log(provider.publicKey?.toBase58());
-    //const data = new TextEncoder().encode(provider.publicKey?.toBase58());
-    const data_string = new TextEncoder().encode("transaction id");
-    const data_txid_uint8array = new Uint8Array([20, 221, 168,  72, 142, 141,  78, 189, 97,  28,  73,  96, 181,  14, 187,  56, 144, 131, 187, 210,  75, 118,  69, 246, 16,  57,  31,  72, 226, 183, 167, 144]);
-    let data_uint8array_to_string = Buffer.from(data_txid_uint8array).toString('utf8');
-    const data_uint8array_utf8_encoded = new TextEncoder().encode(data_uint8array_to_string);
+    /**** Try one of these options ****/
+
+    //1.public key
+    const data_my_public_key = new TextEncoder().encode(provider.publicKey?.toBase58());
+
+    //2.arbitrary string
+    const data_string = new TextEncoder().encode("simple_string");
+
+    //3.uint8array
+    const data_uint8array = new Uint8Array([20, 221, 168,  72, 142, 141,  78, 189, 97,  28,  73,  96, 181,  14, 187,  56, 144, 131, 187, 210,  75, 118,  69, 246, 16,  57,  31,  72, 226, 183, 167, 144]);
+    const data_uint8array_to_utf8 = Buffer.from(data_uint8array).toString('utf8'); //use this
+
+    //4.hex
+    const data_hex = "c5c1edfc94623bd5b2a7c5b8acb15599d3908f95ab3f8bf00ee40e786831781d";
+
     try {
-      const {signature} = await provider.signMessage(data_uint8array_utf8_encoded, 'hex');
-      addLog(`Message signed: ${Buffer.from(signature).toString('hex')}`);
+      const uint8array_encoded = new TextEncoder().encode(data_hex); //set the option
+      const {signature} = await provider.signMessage(uint8array_encoded, 'hex');
+      console.log(signature);
+      console.log(Buffer.from(signature).toString('hex'));
+
+      /* Verify signature */
       const public_key = "ece9828e1499277cfa9a66ba65cccd8a1e186b5eb680249243f239ec82da88a4";
-      const result = verifyEd25519Signature(data_uint8array_utf8_encoded, Buffer.from(signature).toString('hex'), public_key);
+      const result = verifyEd25519Signature(uint8array_encoded, Buffer.from(signature).toString('hex'), public_key);
       addLog("Risultato verifica: " + result);
     } catch (err) {
       console.warn(err);
