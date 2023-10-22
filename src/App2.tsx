@@ -101,7 +101,7 @@ export default function App() {
       const uint8array_encoded = new TextEncoder().encode(data_hex); //set the option
       const {signature} = await provider.signMessage(uint8array_encoded, 'hex');
       console.log(signature);
-      console.log(Buffer.from(signature).toString('hex'));
+      //console.log(Buffer.from(signature).toString('hex'));
 
       /* Verify signature */
       const public_key = "ece9828e1499277cfa9a66ba65cccd8a1e186b5eb680249243f239ec82da88a4";
