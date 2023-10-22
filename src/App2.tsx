@@ -104,8 +104,11 @@ export default function App() {
       //console.log(Buffer.from(signature).toString('hex'));
 
       /* Verify signature */
-      const public_key = "ece9828e1499277cfa9a66ba65cccd8a1e186b5eb680249243f239ec82da88a4";
-      const result = verifyEd25519Signature(uint8array_encoded, Buffer.from(signature).toString('hex'), public_key);
+      //your solana public key in hex, use this to convert from base58 (solana deposit address) to hex:
+      // https://appdevtools.com/base58-encoder-decoder
+      // --> section decode and treat output as HEX
+      const public_key_hex = "ece9828e1499277cfa9a66ba65cccd8a1e186b5eb680249243f239ec82da88a4";
+      const result = verifyEd25519Signature(uint8array_encoded, Buffer.from(signature).toString('hex'), public_key_hex);
       addLog("Risultato verifica: " + result);
     } catch (err) {
       console.warn(err);
