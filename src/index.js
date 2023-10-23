@@ -17,7 +17,7 @@ root.render(
           url: window.location.host,
         }
       }}>
-    <App />
+      <App />
     </MetaMaskProvider>
   </React.StrictMode>
 );

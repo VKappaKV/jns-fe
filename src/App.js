@@ -1,175 +1,210 @@
 import { useSDK } from '@metamask/sdk-react';
 import React, { useState } from 'react';
+import nacl from 'tweetnacl';
+import elliptic from 'elliptic';
 
 const App = () => {
   const [inputFields, setInputFields] = useState({
-    account: undefined,
-    publicKey: undefined,
-    signedEtherum: undefined
+    ethereum: {
+      account: undefined,
+      publicKey: undefined,
+      signed: undefined,
+      transactionId: 'transactionId',
+      verify: undefined
+    },
+    coinbaseSolana: {
+      account: undefined,
+      publicKey: undefined,
+      signed: undefined,
+      transactionId: 'transactionId',
+      verify: undefined
+    }
   });
   const { sdk, connected, connecting, provider, chainId } = useSDK();
 
-  const getInfo = async () => {
-    try {
-      // Connect to an Ethereum wallet and get the account
-      const account = await connect();
+  const getInfo = async (chain) => {
+    console.log(chain)
+    if (window[chain]) {
+      try {
+        // Connect to an Ethereum wallet and get the account
+        const account = inputFields[chain].account ? inputFields[chain].account : await connect(chain);
+    
+        // Get the public key
+        if(account) {
+          const publicKey = inputFields[chain].publicKey ? inputFields[chain].publicKey : await getPublicKey(account, chain);
   
-      // Get the public key
-      const publicKey = await getPublicKey(account);
-  
-      // Sign Ethereum data
-      const signedEthereum = await eth_signTypedData_v4(publicKey, account);
-
-    } catch (error) {
-      console.error('Error:', error);
+          if(publicKey) {
+            // Sign Ethereum data
+            const signedEthereum = inputFields[chain].signedEthereum ? inputFields[chain].signedEthereum : await eth_signTypedData_v4(publicKey, account, chain);
+          }
+        }     
+      } catch (error) {
+        console.error('Error:', error);
+      }
     }
   }
 
-  const setValue = (key, value) => {
+  const setValue = (chain, key, value) => {
+    var data = inputFields[chain]
+    data[key] = value
+
     setInputFields((prevState) => ({
       ...prevState,
-      [key]: value,
-  }));
+      [chain]: data,
+    }));
   }
 
-  const connect = async () => {
-    if (window.ethereum) {
-      try {           
-        const accounts = await sdk?.connect();
-
-        if(accounts){
-          setValue('account', accounts[0])
-          return accounts[0]
-        }
-      } catch (error) {
-          console.error({ error })
+  const connect = async (chain) => {
+    try {
+      var accounts = []
+      if(chain=='ethereum'){
+        accounts = await sdk?.connect();
+      } else {
+        await window[chain].connect()
       }
+
+      if(accounts){
+        var account = accounts[0]
+        setValue(chain, 'account', accounts[0])
+        return accounts[0]
+      }
+    } catch (error) {
+        console.error({ error })
     }
   }
 
-  const getAccounts = async () => {
-    if (window.ethereum) {
-      try {
-        const accounts = await window.ethereum.request({
-          method: 'eth_requestAccounts',
-        })
+  const getPublicKey = async(account, chain)=>{
+    try {   
+      var publicKey = await window[chain].request({
+         method: 'eth_getEncryptionPublicKey',
+         params: [account],
+      })
 
-        if(accounts){
-          setValue('account', accounts[0])
-          return accounts[0]
-        }
-      } catch(err) {
-        if(err.code=='32002') console.error('connect to your wallet Metamask') //Already processing eth_requestAccounts. Please wait. -32002*/
-        else  console.warn(err);
-        
-      }
+      publicKey= `0x${[...atob(publicKey)].map(char => char.charCodeAt(0).toString(16).padStart(2, '0')).join('')}`;
+
+      setValue(chain, 'publicKey', publicKey)
+      return publicKey
+    } catch (error) {
+        console.error({ error })
     }
+  }
+
+  async function eth_signTypedData_v4(publicKey, account, chain) {
+    
+    var regex=/^0x[0-9,a-f,A-F]{40}$/
+    if(regex.test(account)){
+      const method = 'eth_signTypedData_v4'
+
+      const domain = {
+        chainId: 1,
+        name: 'Sign TransactionId',
+        version: '1',
+      }
+
+      const transactionId=inputFields[chain].transactionId
+      var message = {
+        transactionId, // Sostituisci con il valore che desideri firmare
+      }
+
+      const msgParams = JSON.stringify({
+        domain,    
+        message,
+        primaryType: 'TransactionId',
+        types: {
+          EIP712Domain: [
+            { name: 'name', type: 'string' },
+            { name: 'version', type: 'string' },
+            { name: 'chainId', type: 'uint256' },
+          ],    
+          TransactionId: [
+            { name: 'transactionId', type: 'string' },
+          ],
+        }
+      });
+
+      var signature = await window[chain].request({
+        method,
+        params: [account, msgParams],
+      });
+
+      setValue(chain, 'signedEtherum', signature.slice(2))
+
+      const v = signature.slice(2, 4); // La parte v è generalmente lunga 4 byte
+      const r = signature.slice(2, 66); // La parte r è generalmente lunga 32 byte
+      const s = signature.slice(66, 130); // La parte s è generalmente lunga 32 byte
+
+      console.log(v,r,s)
+
+      console.log((r).length)
+
+      verifyECDSASignature(transactionId, signature.slice(2), publicKey, chain)
+    }
+  }
+
+  const verifyECDSASignature = (message, signature, publicKey, chain) => {
+    console.log(publicKey)
+
+    const ec = new elliptic.ec('secp256k1');
+    const messageData = new TextEncoder().encode(message);
+    console.log(messageData, message)
+
+    const signatureData = new Uint8Array(signature.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+    const publicKeyData = new Uint8Array(publicKey.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+
+    console.log(publicKeyData.length)
+
+    const isVerified = ec.verify(messageData, signatureData, publicKeyData);
+    setValue(chain, 'verify', isVerified)  
+    return isVerified;
   };
 
-  const getPublicKey = async(account)=>{
-    if (window.ethereum) {
-      try {   
-          const publicKey = await window.ethereum.request({
-             method: 'eth_getEncryptionPublicKey',
-             params: [account],
-          })
+  const verifyEd25519Signature = (message, signature, publicKey, chain) => {
+    const textEncoder = new TextEncoder();
+    const messageData = textEncoder.encode(message);
+    const signatureData = new Uint8Array(signature.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+    const publicKeyData = new Uint8Array(publicKey.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+    const isVerified = nacl.sign.detached.verify(messageData, signatureData, publicKeyData);
+    setValue(chain, 'verify', isVerified)
+    return isVerified;
+  };
 
-          setValue('publicKey', publicKey)
-          return publicKey
-      } catch (error) {
-          console.error({ error })
-      }
-   }
-  }
-
-  async function eth_signTypedData_v4(publicKey, account) {
-    if (window.ethereum) {
-      try {
-        const from = account;
-        
-        const msgParams = JSON.stringify({
-          domain: {
-            // This defines the network, in this case, Mainnet.
-            chainId: chainId,
-            // Give a user-friendly name to the specific contract you're signing for.
-            name: 'Sign Public Key with Address',
-            // This identifies the latest version.
-            version: '1',
-          },
-      
-          // This defines the message you're proposing the user to sign, is dapp-specific, and contains
-          // anything you want. There are no required fields. Be as explicit as possible when building out
-          // the message schema.
-          message: {
-            address: account,
-            publicKey: publicKey
-          },
-          // This refers to the keys of the following types object.
-          primaryType: 'PublicKey',
-          types: {
-            // This refers to the domain the contract is hosted on.
-            EIP712Domain: [
-              { name: 'name', type: 'string' },
-              { name: 'version', type: 'string' },
-              { name: 'chainId', type: 'uint256' }
-            ],
-            // Not an EIP712Domain definition.
-            Group: [
-              { name: 'name', type: 'string' },
-              { name: 'members', type: 'Person[]' },
-            ],
-            // Refer to primaryType.
-            PublicKey: [
-              { name: 'address', type: 'string' },
-              { name: 'publicKey', type: 'string' },
-            ],
-            // Not an EIP712Domain definition.
-            Person: [
-              { name: 'name', type: 'string' },
-              { name: 'wallets', type: 'address[]' },
-            ],
-          },
-        });
-
-        var params = [from, msgParams];
-        var method = 'eth_signTypedData_v4';
-
-        window.ethereum.sendAsync(
-          {
-            method,
-            params,
-            from: from,
-          },
-          function (err, result) {
-            if(result){
-              setValue('signedEtherum', result.result)
-              return result
-            }else {
-              console.error(err)
-            }
-          });
-      } catch (err) {
-        console.error(err);
-      }
-    }
-  }
-
-
+  //console.log(window.CoinbaseWalletSDK)
+  //console.log(window.coinbaseSolana)
   return (
     <div className="App">
-      <button style={{ padding: 10, margin: 10 }} onClick={getInfo}>
-        Connect
+      <button style={{ padding: 10, margin: 10 }} onClick={() => getInfo('ethereum')}>
+        Connect Ethereum
       </button>
       {connected && (
         <div>
           <>
             {chainId && `Connected chain: ${chainId}`}
             <p></p>
-            {inputFields.account && `Connected account: ${inputFields.account}`} {/*QUESTO MI PERMETTE DI AVERE L'ACCOUNT*/}
+            {inputFields.ethereum.account && `Connected account: ${inputFields.ethereum.account}`}
             <p></p>
-            {inputFields.publicKey && `Connected publicKey: ${inputFields.publicKey}`} {/*QUESTO MI PERMETTE DI AVERE L'ACCOUNT*/}
+            {inputFields.ethereum.publicKey && `Connected publicKey: ${inputFields.ethereum.publicKey}`} 
             <p></p>
-            {inputFields.signedEtherum && `Sigend key: ${inputFields.signedEtherum}`}
+            {inputFields.ethereum.signedEtherum && `Sigend key: ${inputFields.ethereum.signedEtherum}`}
+            <p></p>
+            {inputFields.ethereum.verify!==undefined && `Verify: ${inputFields.ethereum.verify}`}
+          </>
+        </div>
+      )}
+      <button style={{ padding: 10, margin: 10 }} onClick={() => getInfo('coinbaseSolana')}>
+        Connect Solana
+      </button>
+      {connected && (
+        <div>
+          <>
+            {chainId && `Connected chain: ${chainId}`}
+            <p></p>
+            {inputFields.coinbaseSolana.account && `Connected account: ${inputFields.coinbaseSolana.account}`}
+            <p></p>
+            {inputFields.coinbaseSolana.publicKey && `Connected publicKey: ${inputFields.coinbaseSolana.publicKey}`}
+            <p></p>
+            {inputFields.coinbaseSolana.signedEtherum && `Sigend key: ${inputFields.coinbaseSolana.signedEtherum}`}
+            <p></p>
+            {inputFields.coinbaseSolana.verify!==undefined && `Verify: ${inputFields.coinbaseSolana.verify}`}
           </>
         </div>
       )}
