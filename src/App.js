@@ -2,6 +2,7 @@ import { useSDK } from '@metamask/sdk-react';
 import React, { useState } from 'react';
 import nacl from 'tweetnacl';
 import elliptic from 'elliptic';
+import {Buffer} from 'buffer'
 
 const App = () => {
   const [inputFields, setInputFields] = useState({
@@ -81,6 +82,42 @@ const App = () => {
       })
 
       publicKey= `0x${[...atob(publicKey)].map(char => char.charCodeAt(0).toString(16).padStart(2, '0')).join('')}`;
+
+
+      console.log(publicKey.length)
+      
+
+
+      
+      
+      const secp256k1 = new elliptic.ec('secp256k1');
+
+      // Chiave pubblica compressa Ethereum (in esadecimale)
+      const publicKeyHex = publicKey.slice(2);
+
+      // Decodifica la chiave pubblica compressa
+      const publicKeyBuffer = Buffer.from(publicKeyHex, 'hex');
+
+      // Estrai la coordinata x
+      var x = publicKeyBuffer.slice(1); // Rimuovi il byte di indicazione y pari/dispari
+
+      // Calcola la coordinata y utilizzando la curva ellittica secp256k1
+      var y = secp256k1.curve.pointFromX(x, Buffer.from([2])).y;
+
+      x= x.toString('hex');
+      y= y.toString(16);
+
+      console.log(x,y)
+
+      console.log(x.length, y.length)
+
+
+
+
+
+
+
+
 
       setValue(chain, 'publicKey', publicKey)
       return publicKey
