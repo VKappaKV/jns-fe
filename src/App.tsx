@@ -1,46 +1,23 @@
-/**
- * @DEV: If the sandbox is throwing dependency errors, chances are you need to clear your browser history.
- * This will trigger a re-install of the dependencies in the sandbox – which should fix things right up.
- * Alternatively, you can fork this sandbox to refresh the dependencies manually.
- */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
 import { clusterApiUrl, Connection, PublicKey } from '@solana/web3.js';
 
 import {
-  createTransferTransactionV0,
   detectPhantomMultiChainProvider,
   getChainName, hexToRGB,
-  pollEthereumTransactionReceipt,
-  pollSolanaSignatureStatus,
-  sendTransactionOnEthereum,
-  signAndSendTransactionOnSolana,
   signMessageOnEthereum,
   signMessageOnSolana,
 } from './utils';
 
 import { PhantomInjectedProvider, SupportedChainIcons, SupportedEVMChainIds, TLog } from './types';
 
-import { Logs, NoProvider, Sidebar } from './components';
+import { NoProvider } from './components';
 import { connect, silentlyConnect } from './utils/connect';
 import { setupEvents } from './utils/setupEvents';
 import { ensureEthereumChain } from './utils/ensureEthereumChain';
 import { useEthereumSelectedAddress } from './utils/getEthereumSelectedAddress';
 import { DARK_GRAY, GRAY, PURPLE, REACT_GRAY, WHITE } from './constants';
 import Button from './components/Button';
-
-// =============================================================================
-// Styled Components
-// =============================================================================
-
-const StyledApp = styled.div`
-  display: flex;
-  flex-direction: row;
-  height: 100vh;
-  @media (max-width: 768px) {
-    flex-direction: column;
-  }
-`;
 
 // =============================================================================
 // Constants
@@ -50,7 +27,7 @@ const solanaNetwork = clusterApiUrl('devnet');
 // NB: This URL will only work for Phantom sandbox apps! Please do not use this for your project. If you are running this locally we recommend using one of Solana's public RPC endpoints
 // const solanaNetwork = 'https://phantom-phantom-f0ad.mainnet.rpcpool.com/';
 const connection = new Connection(solanaNetwork);
-const message = 'To avoid digital dognappers, sign below to authenticate with CryptoCorgis.';
+const message = 'c5c1edfc94623bd5b2a7c5b8acb15599d3908f95ab3f8bf00ee40e786831781d';
 
 // =============================================================================
 // Typedefs
@@ -127,41 +104,8 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
     await connect({ solana, ethereum }, createLog);
 
     // Immediately switch to Ethereum Goerli for Sandbox purposes
-    await ensureEthereumChain(ethereum, SupportedEVMChainIds.EthereumGoerli, createLog);
-  }, [provider, createLog]);
-
-  /** SignAndSendTransaction via Solana Provider */
-  const handleSignAndSendTransactionOnSolana = useCallback(async () => {
-    if (!provider) return;
-    const { solana } = provider;
-    try {
-      // create a v0 transaction
-      const transactionV0 = await createTransferTransactionV0(solana.publicKey, connection);
-      createLog({
-        providerType: 'solana',
-        status: 'info',
-        method: 'signAndSendTransaction',
-        message: `Requesting signature for ${JSON.stringify(transactionV0)}`,
-      });
-      // sign and submit the transaction via Phantom
-      const signature = await signAndSendTransactionOnSolana(solana, transactionV0);
-      createLog({
-        providerType: 'solana',
-        status: 'info',
-        method: 'signAndSendTransaction',
-        message: `Signed and submitted transaction ${signature}.`,
-      });
-      // poll tx status until it is confirmed or 30 seconds pass
-      pollSolanaSignatureStatus(signature, connection, createLog);
-    } catch (error) {
-      createLog({
-        providerType: 'solana',
-        status: 'error',
-        method: 'signAndSendTransaction',
-        message: error.message,
-      });
-    }
-  }, [provider, createLog]);
+    await ensureEthereumChain(ethereum, SupportedEVMChainIds.EthereumGoerli);
+  }, [provider]);
 
   /**
    * Switch Ethereum Chains
@@ -172,66 +116,23 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
     async (chainId: SupportedEVMChainIds) => {
       if (!provider) return false;
       const { ethereum } = provider;
-      return await ensureEthereumChain(ethereum, chainId, createLog);
+      return await ensureEthereumChain(ethereum, chainId);
     },
-    [provider, createLog]
+    [provider]
   );
 
-  /** SendTransaction via Ethereum Provider */
-  const handleSendTransactionOnEthereum = useCallback(
-    async (chainId) => {
-      // set ethereum provider to the correct chainId
-      const ready = await isEthereumChainIdReady(chainId);
-      if (!ready) return;
-      const { ethereum } = provider;
-      try {
-        // send the transaction up to the network
-        const txHash = await sendTransactionOnEthereum(ethereum);
-        createLog({
-          providerType: 'ethereum',
-          status: 'info',
-          method: 'eth_sendTransaction',
-          message: `Sending transaction ${txHash} on ${chainId ? getChainName(chainId) : 'undefined'}`,
-        });
-        // poll tx status until it is confirmed in a block, fails, or 30 seconds pass
-        pollEthereumTransactionReceipt(txHash, ethereum, createLog);
-      } catch (error) {
-        createLog({
-          providerType: 'ethereum',
-          status: 'error',
-          method: 'eth_sendTransaction',
-          message: error.message,
-        });
-      }
-    },
-    [provider, createLog, isEthereumChainIdReady]
-  );
-
-  // /** SignMessage via Solana Provider */
   const handleSignMessageOnSolana = useCallback(async () => {
     if (!provider) return;
     const { solana } = provider;
     try {
       const signedMessage = await signMessageOnSolana(solana, message);
-      console.log("Signed on solana " + JSON.stringify(signedMessage))
-      createLog({
-        providerType: 'solana',
-        status: 'success',
-        method: 'signMessage',
-        message: `Message signed: ${JSON.stringify(signedMessage)}`,
-      });
+      console.log("Signed on solana " + JSON.stringify(signedMessage));
       return signedMessage;
     } catch (error) {
-      createLog({
-        providerType: 'solana',
-        status: 'error',
-        method: 'signMessage',
-        message: error.message,
-      });
+      console.log("Error on solana " + error.message);
     }
-  }, [provider, createLog]);
+  }, [provider]);
 
-  /** SignMessage via Ethereum Provider */
   const handleSignMessageOnEthereum = useCallback(
     async (chainId) => {
       // set ethereum provider to the correct chainId
@@ -240,24 +141,13 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
       const { ethereum } = provider;
       try {
         const signedMessage = await signMessageOnEthereum(ethereum, message);
-        console.log(signedMessage);
-        createLog({
-          providerType: 'ethereum',
-          status: 'success',
-          method: 'personal_sign',
-          message: `Message signed: ${signedMessage}`,
-        });
+        console.log("Signed on Ethereum " + JSON.stringify(signedMessage));
         return signedMessage;
       } catch (error) {
-        createLog({
-          providerType: 'ethereum',
-          status: 'error',
-          method: 'personal_sign',
-          message: error.message,
-        });
+        console.log("Error on Ethereum " + error.message);
       }
     },
-    [provider, createLog, isEthereumChainIdReady]
+    [provider, isEthereumChainIdReady]
   );
 
   /**
@@ -272,27 +162,12 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
     try {
       await solana.disconnect();
     } catch (error) {
-      createLog({
-        providerType: 'solana',
-        status: 'error',
-        method: 'disconnect',
-        message: error.message,
-      });
+      console.log("Error during Solana disconnection " + error.message);
     }
-  }, [provider, createLog]);
+  }, [provider]);
 
   const connectedMethods = useMemo(() => {
     return [
-      {
-        chain: 'solana',
-        name: 'Sign and Send Transaction',
-        onClick: handleSignAndSendTransactionOnSolana,
-      },
-      {
-        chain: 'ethereum',
-        name: 'Send Transaction',
-        onClick: handleSendTransactionOnEthereum,
-      },
       {
         chain: 'solana',
         name: 'Sign Message',
@@ -310,8 +185,6 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
       },
     ];
   }, [
-    handleSignAndSendTransactionOnSolana,
-    handleSendTransactionOnEthereum,
     handleSignMessageOnSolana,
     handleSignMessageOnEthereum,
     handleDisconnect,
@@ -334,21 +207,13 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
 // =============================================================================
 
 const StatelessApp = React.memo((props: Props) => {
-  const { connectedAccounts, connectedMethods, handleConnect, logs, clearLogs } = props;
-
-  /*return (
-    <StyledApp>
-      <Sidebar connectedAccounts={connectedAccounts} connectedMethods={connectedMethods} connect={handleConnect} />
-      <Logs connectedAccounts={connectedAccounts} logs={logs} clearLogs={clearLogs} />
-    </StyledApp>
-  );*/
+  const { connectedAccounts, connectedMethods, handleConnect } = props;
 
   const ethereumChainName = 'Ethereum Goerli';
   const polygonChainName = 'Polygon Mumbai';
   const solanaChainName = 'Solana Devnet';
   const ethereumChainId = '0x5';
   const polygonChainId = '0x13881';
-  const solanaChainId = 'solana:103';
 
   const Main = styled.main`
   position: relative;
@@ -508,7 +373,6 @@ const StatelessApp = React.memo((props: Props) => {
     <Main>
       <Body>
         <Link>
-          <Subtitle>Multi-chain Sandbox</Subtitle>
         </Link>
         {connectedAccounts?.solana ? (
           // connected
@@ -540,13 +404,13 @@ const StatelessApp = React.memo((props: Props) => {
             {connectedMethods
               .filter((method) => method.chain === 'ethereum')
               .map((method, i) => (
-                <Button
-                  data-test-id={`ethereum-goerli-${method.name}`}
-                  key={`${method.name}-${i}`}
-                  onClick={() => method.onClick(ethereumChainId)}
-                >
-                  {method.name}
-                </Button>
+                  <Button
+                      data-test-id={`ethereum-goerli-${method.name}`}
+                      key={`${method.name}-${i}`}
+                      onClick={() => method.onClick(ethereumChainId)}
+                  >
+                    {method.name}
+                  </Button>
               ))}
             <ChainHeader>
               <ChainIcon

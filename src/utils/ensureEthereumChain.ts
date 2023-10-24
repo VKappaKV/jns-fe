@@ -1,12 +1,11 @@
 // Switches chain to the requested chain ID if necessary, rejects if unsuccessful.
-import { PhantomEthereumProvider, SupportedEVMChainIds, TLog } from '../types';
+import { PhantomEthereumProvider, SupportedEVMChainIds } from '../types';
 import getEthereumChain from './getEthereumChain';
 import switchEthereumChain from './switchEthereumChain';
 
 export const ensureEthereumChain = async (
   provider: PhantomEthereumProvider,
-  chainId: SupportedEVMChainIds,
-  createLog: (log: TLog) => void
+  chainId: SupportedEVMChainIds
 ): Promise<boolean> => {
   const curChainId = await getEthereumChain(provider);
   if (curChainId === chainId) {
@@ -17,12 +16,7 @@ export const ensureEthereumChain = async (
     await switchEthereumChain(provider, chainId);
     return true;
   } catch (error) {
-    createLog({
-      providerType: 'ethereum',
-      status: 'error',
-      method: 'wallet_switchEthereumChain',
-      message: error.message,
-    });
+    console.log("Error in switchEthereumChain " + error.message);
     return false;
   }
 };
