@@ -6,12 +6,12 @@ import SolanaVerifier from "./SolanaVerifier";
 
 /* Phantom */
 
-/*ReactDOM.render(
+ReactDOM.render(
   <React.StrictMode>
     <App />
   </React.StrictMode>,
   document.getElementById('root')
-);*/
+);
 
 
 
