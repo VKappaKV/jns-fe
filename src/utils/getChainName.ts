@@ -1,4 +1,4 @@
-import { SupportedChainNames, SupportedEVMChainIds } from '../types';
+import { SupportedChainNames, SupportedEVMChainIds } from '../scaffholding/types';
 import getChainData from './getChainData';
 
 /**

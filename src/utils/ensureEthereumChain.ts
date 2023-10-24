@@ -1,5 +1,5 @@
 // Switches chain to the requested chain ID if necessary, rejects if unsuccessful.
-import { PhantomEthereumProvider, SupportedEVMChainIds } from '../types';
+import { PhantomEthereumProvider, SupportedEVMChainIds } from '../scaffholding/types';
 import getEthereumChain from './getEthereumChain';
 import switchEthereumChain from './switchEthereumChain';
 

@@ -1,4 +1,5 @@
 import { PublicKey, SendOptions, Transaction, VersionedTransaction } from '@solana/web3.js';
+import {ConnectedAccounts, ConnectedMethods} from "./PhantomBackend";
 
 type DisplayEncoding = 'utf8' | 'hex';
 
@@ -29,6 +30,14 @@ type EthereumRequestMethod =
   | 'wallet_switchEthereumChain';
 
 type PhantomRequestMethod = SolanaRequestMethod | EthereumRequestMethod;
+
+export interface Props {
+  connectedAccounts: ConnectedAccounts;
+  connectedMethods: ConnectedMethods[];
+  handleConnect: () => Promise<void>;
+  logs: TLog[];
+  clearLogs: () => void;
+}
 
 interface SolanaConnectOptions {
   onlyIfTrusted: boolean;

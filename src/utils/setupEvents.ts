@@ -1,4 +1,4 @@
-import { PhantomInjectedProvider, SupportedEVMChainIds, TLog } from '../types';
+import { PhantomInjectedProvider, SupportedEVMChainIds, TLog } from '../scaffholding/types';
 import { PublicKey } from '@solana/web3.js';
 import { getChainName } from './index';
 import { silentlyConnect } from './connect';

@@ -1,4 +1,4 @@
-import { PhantomInjectedProvider } from '../types';
+import { PhantomInjectedProvider } from '../scaffholding/types';
 
 const POLLING_INTERVAL = 1000; // One second
 const MAX_POLLS = 5;

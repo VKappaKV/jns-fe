@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 
-import { WHITE, DARK_GRAY, LIGHT_GRAY } from '../../constants';
+import { WHITE, DARK_GRAY, LIGHT_GRAY } from '../../assets/constants';
 
 import { hexToRGB } from '../../utils';
 

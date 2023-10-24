@@ -1,4 +1,4 @@
-import { PhantomEthereumProvider } from '../types';
+import { PhantomEthereumProvider } from '../scaffholding/types';
 import { getEthereumSelectedAddress } from './getEthereumSelectedAddress';
 import { ethers } from 'ethers';
 

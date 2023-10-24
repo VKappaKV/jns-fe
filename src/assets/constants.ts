@@ -1,4 +1,4 @@
-import { SupportedChainIcons, SupportedChainNames, SupportedEVMChainIds, SupportedSolanaChainIds } from './types';
+import { SupportedChainIcons, SupportedChainNames, SupportedEVMChainIds, SupportedSolanaChainIds } from '../scaffholding/types';
 
 // =============================================================================
 // Colors

@@ -1,4 +1,4 @@
-import { PhantomInjectedProvider } from '../types';
+import { PhantomInjectedProvider } from '../scaffholding/types';
 import { PublicKey } from '@solana/web3.js';
 import { getEthereumSelectedAddress } from './getEthereumSelectedAddress';
 

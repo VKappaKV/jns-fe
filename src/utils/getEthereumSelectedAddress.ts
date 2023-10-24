@@ -1,4 +1,4 @@
-import { PhantomEthereumProvider } from '../types';
+import { PhantomEthereumProvider } from '../scaffholding/types';
 import { useEffect, useState } from 'react';
 
 export const getEthereumSelectedAddress = async (provider: PhantomEthereumProvider): Promise<string | undefined> => {

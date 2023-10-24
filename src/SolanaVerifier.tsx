@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { clusterApiUrl, Connection, PublicKey, Transaction } from '@solana/web3.js';
-import './styles.css';
+import './assets/stylesSolana.css';
 import nacl from 'tweetnacl';
 import { Buffer } from 'buffer';
 

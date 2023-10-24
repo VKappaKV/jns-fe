@@ -1,7 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 
-import { REACT_GRAY } from '../../constants';
+import { REACT_GRAY } from '../../assets/constants';
 
 // =============================================================================
 // Styled Components

@@ -1,5 +1,5 @@
-import { SUPPORTED_CHAINS } from '../constants';
-import { SupportedChainIcons, SupportedChainNames, SupportedEVMChainIds } from '../types';
+import { SUPPORTED_CHAINS } from '../assets/constants';
+import { SupportedChainIcons, SupportedChainNames, SupportedEVMChainIds } from '../scaffholding/types';
 
 /**
  * Returns a chain's name and icon if it supported by Phantom

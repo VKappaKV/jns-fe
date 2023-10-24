@@ -1,4 +1,4 @@
-import { PhantomEthereumProvider, SupportedEVMChainIds } from '../types';
+import { PhantomEthereumProvider, SupportedEVMChainIds } from '../scaffholding/types';
 
 /**
  * Switches the ethereum provider to a new chainId

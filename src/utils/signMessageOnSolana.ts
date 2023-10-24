@@ -1,4 +1,4 @@
-import { PhantomSolanaProvider } from '../types';
+import { PhantomSolanaProvider } from '../scaffholding/types';
 
 /**
  * Signs a message on Solana
