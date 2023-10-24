@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
-import { clusterApiUrl, Connection, PublicKey } from '@solana/web3.js';
+import { PublicKey } from '@solana/web3.js';
 
 import {
   detectPhantomMultiChainProvider,
@@ -23,10 +23,6 @@ import Button from './components/Button';
 // Constants
 // =============================================================================
 
-const solanaNetwork = clusterApiUrl('devnet');
-// NB: This URL will only work for Phantom sandbox apps! Please do not use this for your project. If you are running this locally we recommend using one of Solana's public RPC endpoints
-// const solanaNetwork = 'https://phantom-phantom-f0ad.mainnet.rpcpool.com/';
-const connection = new Connection(solanaNetwork);
 const message = 'c5c1edfc94623bd5b2a7c5b8acb15599d3908f95ab3f8bf00ee40e786831781d';
 
 // =============================================================================
@@ -88,7 +84,7 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
     const { solana, ethereum } = provider;
 
     // attempt to eagerly connect on initial startup
-    silentlyConnect({ solana, ethereum }, createLog);
+    silentlyConnect({ solana, ethereum });
     setupEvents({ solana, ethereum }, createLog, setEthereumSelectedAddress);
 
     return () => {
@@ -101,7 +97,7 @@ const useProps = (provider: PhantomInjectedProvider | null): Props => {
     if (!provider) return;
     const { solana, ethereum } = provider;
 
-    await connect({ solana, ethereum }, createLog);
+    await connect({ solana, ethereum });
 
     // Immediately switch to Ethereum Goerli for Sandbox purposes
     await ensureEthereumChain(ethereum, SupportedEVMChainIds.EthereumGoerli);
