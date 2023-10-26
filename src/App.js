@@ -6,13 +6,11 @@ import {Buffer} from 'buffer'
 
 const App = () => {
   const [inputFields, setInputFields] = useState({
-    ethereum: {
-      account: undefined,
-      publicKey: undefined,
-      signed: undefined,
-      transactionId: 'transactionId',
-      verify: undefined
-    }
+    account: undefined,
+    publicKey: undefined,
+    signed: undefined,
+    transactionId: 'transactionId',
+    verify: undefined
   });
   const { sdk, connected, connecting, provider, chainId } = useSDK();
 
@@ -103,6 +101,7 @@ const App = () => {
       }
 
       const transactionId=inputFields.transactionId
+      console.log(transactionId)
       var message = {
         transactionId, // Sostituisci con il valore che desideri firmare
       }
