@@ -81,43 +81,20 @@ const App = () => {
          params: [account],
       })
 
-      publicKey= `0x${[...atob(publicKey)].map(char => char.charCodeAt(0).toString(16).padStart(2, '0')).join('')}`;
+      publicKey= [...atob(publicKey)].map(char => char.charCodeAt(0).toString(16).padStart(2, '0')).join('');
 
 
-      console.log(publicKey.length)
+      var x=publicKey.slice(0, 32); // La parte r è generalmente lunga 32 byte
+      var y=publicKey.slice(32); // La parte r è generalmente lunga 32 byte
       
 
-
-      
-      
-      const secp256k1 = new elliptic.ec('secp256k1');
-
-      // Chiave pubblica compressa Ethereum (in esadecimale)
-      const publicKeyHex = publicKey.slice(2);
-
-      // Decodifica la chiave pubblica compressa
-      const publicKeyBuffer = Buffer.from(publicKeyHex, 'hex');
-
-      // Estrai la coordinata x
-      var x = publicKeyBuffer.slice(1); // Rimuovi il byte di indicazione y pari/dispari
-
-      // Calcola la coordinata y utilizzando la curva ellittica secp256k1
-      var y = secp256k1.curve.pointFromX(x, Buffer.from([2])).y;
-
-      x= x.toString('hex');
-      y= y.toString(16);
-
+      console.log(publicKey)
+      console.log(x.length,y.length)
       console.log(x,y)
+      
+      publicKey=x+y
 
-      console.log(x.length, y.length)
-
-
-
-
-
-
-
-
+      console.log(publicKey)
 
       setValue(chain, 'publicKey', publicKey)
       return publicKey
@@ -170,10 +147,6 @@ const App = () => {
       const r = signature.slice(2, 66); // La parte r è generalmente lunga 32 byte
       const s = signature.slice(66, 130); // La parte s è generalmente lunga 32 byte
 
-      console.log(v,r,s)
-
-      console.log((r).length)
-
       verifyECDSASignature(transactionId, signature.slice(2), publicKey, chain)
     }
   }
@@ -191,7 +164,8 @@ const App = () => {
     console.log(publicKeyData.length)
 
     const isVerified = ec.verify(messageData, signatureData, publicKeyData);
-    setValue(chain, 'verify', isVerified)  
+    console.log(isVerified)
+    setValue('verify', isVerified)  
     return isVerified;
   };
 
@@ -201,7 +175,7 @@ const App = () => {
     const signatureData = new Uint8Array(signature.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
     const publicKeyData = new Uint8Array(publicKey.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
     const isVerified = nacl.sign.detached.verify(messageData, signatureData, publicKeyData);
-    setValue(chain, 'verify', isVerified)
+    setValue('verify', isVerified)
     return isVerified;
   };
 
