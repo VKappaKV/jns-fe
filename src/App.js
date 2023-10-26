@@ -3,13 +3,14 @@ import React, { useState } from 'react';
 import nacl from 'tweetnacl';
 import elliptic from 'elliptic';
 import {Buffer} from 'buffer'
+import { ECDSA } from '@oliverne/easy-ecdsa';
+import bs58 from 'bs58';
 
 const App = () => {
   const [inputFields, setInputFields] = useState({
     account: undefined,
     publicKey: undefined,
     signed: undefined,
-    transactionId: 'transactionId',
     verify: undefined
   });
   const { sdk, connected, connecting, provider, chainId } = useSDK();
@@ -22,12 +23,15 @@ const App = () => {
     
         // Get the public key
         if(account) {
-          const publicKey = inputFields.publicKey ? inputFields.publicKey : await getPublicKey(account);
-  
-          if(publicKey) {
-            // Sign Ethereum data
-            const signedEthereum = inputFields.signedEthereum ? inputFields.signedEthereum : await eth_signTypedData_v4(publicKey, account);
-          }
+          /* type data */
+          /*
+          const publicKey_hex = inputFields.publicKey ? inputFields.publicKey : await getPublicKeyHex(account);
+          const signedEthereum = inputFields.signedEthereum ? inputFields.signedEthereum : await eth_signTypedData_v4(publicKey_hex, account);
+          */
+
+          /* Personal sign */
+          const publicKey_hex = await getPublicKeyHex(account);
+          const signedEthereum = await eth_personal_sign(publicKey_hex, account);
         }     
       } catch (error) {
         console.error('Error:', error);
@@ -36,7 +40,6 @@ const App = () => {
   }
 
   const setValue = (key, value) => {
-
     setInputFields((prevState) => ({
       ...prevState,
       [key]: value,
@@ -66,33 +69,30 @@ const App = () => {
          params: [account],
       })
 
-      publicKey= [...atob(publicKey)].map(char => char.charCodeAt(0).toString(16).padStart(2, '0')).join('');
+      console.log("Original public key: " + publicKey);
 
-
-      var x=publicKey.slice(0, 32); // La parte r è generalmente lunga 32 byte
-      var y=publicKey.slice(32); // La parte r è generalmente lunga 32 byte
-      
-
-      console.log(publicKey)
-      console.log(x.length,y.length)
-      console.log(x,y)
-      
-      publicKey=x+y
-
-      console.log(publicKey)
-
-      setValue('publicKey', publicKey)
       return publicKey
     } catch (error) {
         console.error({ error })
     }
   }
 
-  async function eth_signTypedData_v4(publicKey, account) {
-    
+  const getPublicKeyHex = async(account)=>{
+    try {
+      const publicKey = await getPublicKey(account)
+
+      let publicKey_hex = [...atob(publicKey)].map(char => char.charCodeAt(0).toString(16).padStart(2, '0')).join('');
+      console.log("Public key hex: " + publicKey_hex)
+
+      return publicKey_hex
+    } catch (error) {
+      console.error({ error })
+    }
+  }
+
+  /*async function eth_signTypedData_v4(publicKey_hex, account) {
     var regex=/^0x[0-9,a-f,A-F]{40}$/
     if(regex.test(account)){
-      const method = 'eth_signTypedData_v4'
 
       const domain = {
         chainId: 1,
@@ -100,14 +100,14 @@ const App = () => {
         version: '1',
       }
 
-      const transactionId=inputFields.transactionId
-      console.log(transactionId)
       var message = {
-        transactionId, // Sostituisci con il valore che desideri firmare
-      }
+        transactionId: "arbitrary string"
+      };
+
+      console.log("Messaggio da firmare: " + message);
 
       const msgParams = JSON.stringify({
-        domain,    
+        domain,
         message,
         primaryType: 'TransactionId',
         types: {
@@ -115,46 +115,62 @@ const App = () => {
             { name: 'name', type: 'string' },
             { name: 'version', type: 'string' },
             { name: 'chainId', type: 'uint256' },
-          ],    
+          ],
           TransactionId: [
             { name: 'transactionId', type: 'string' },
           ],
         }
       });
 
-      var signature = await window.ethereum.request({
-        method,
-        params: [account, msgParams],
-      });
+      try {
+        var signature = await window.ethereum.request({
+          method: "eth_signTypedData_v4",
+          params: [account, msgParams],
+        });
 
-      setValue( 'signedEtherum', signature.slice(2))
+        console.log("Original signature: " + signature);
 
-      const v = signature.slice(2, 4); // La parte v è generalmente lunga 4 byte
-      const r = signature.slice(2, 66); // La parte r è generalmente lunga 32 byte
-      const s = signature.slice(66, 130); // La parte s è generalmente lunga 32 byte
+        setValue('signedEtherum', signature.slice(2))
 
-      console.log(s,v,r)
-
-      verifyECDSASignature(transactionId, signature.slice(2), publicKey)
+        await verifyECDSASignature(message, signature.slice(2), publicKey_hex)
+      } catch (error) {
+        // Gestisci l'errore in modo appropriato, ad esempio stampando un messaggio di errore o eseguendo azioni di ripristino.
+        console.error("Errore durante la firma: " + error);
+        // Esempio: throw error; // Puoi anche lanciare l'errore se vuoi propagarlo
+      }
     }
+  }*/
+
+  async function eth_personal_sign(publicKey, account) {
+      var message = "arbitrary string";
+
+      try {
+        var signature = await window.ethereum.request({
+          method: "personal_sign",
+          params: [message, account],
+        });
+
+        console.log("Original signature: " + signature);
+
+        await verifyECDSASignature(message, signature.slice(2), publicKey)
+      } catch (error) {
+        // Gestisci l'errore in modo appropriato, ad esempio stampando un messaggio di errore o eseguendo azioni di ripristino.
+        console.error("Errore durante la firma: " + error);
+        // Esempio: throw error; // Puoi anche lanciare l'errore se vuoi propagarlo
+      }
   }
 
-  const verifyECDSASignature = (message, signature, publicKey, chain) => {
-    console.log('publicKey', publicKey)
 
-    const ec = new elliptic.ec('secp256k1');
-    const messageData = new TextEncoder().encode(message);
-    console.log(messageData, message)
+  const verifyECDSASignature = async (message_string, signature_hex, publicKey_hex) => {
+    const signer = new ECDSA();
 
-    const signatureData = new Uint8Array(signature.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
-    const publicKeyData = new Uint8Array(publicKey.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+    const publicKey_bs58 = bs58.encode(Buffer.from(publicKey_hex, 'hex'));
+    console.log("publicKey in BS58: " + publicKey_bs58);
 
-    console.log(publicKeyData.length)
+    const signature_bs58 = bs58.encode(Buffer.from(signature_hex, 'hex'));
+    console.log("Signature in BS58: " + signature_bs58);
 
-    const isVerified = ec.verify(messageData, signatureData, publicKeyData);
-    console.log(isVerified)
-    setValue('verify', isVerified)  
-    return isVerified;
+    console.log('Verifica signature: ', signer.verify(message_string, signature_bs58, publicKey_bs58));
   };
 
   const verifyEd25519Signature = (message, signature, publicKey, chain) => {
@@ -171,7 +187,7 @@ const App = () => {
   //console.log(window.coinbaseSolana)
   return (
     <div className="App">
-      <button style={{ padding: 10, margin: 10 }} onClick={() => getInfo()}>
+      <button style={{ padding: 10, margin: 10 }} onClick={async () => await getInfo()}>
         Connect Ethereum
       </button>
       {connected && (
@@ -185,7 +201,7 @@ const App = () => {
             <p></p>
             {inputFields.signedEtherum && `Sigend key: ${inputFields.signedEtherum}`}
             <p></p>
-            {inputFields.verify!==undefined && `Verify: ${inputFields.verify}`}
+            {`Verify: ${inputFields.verify}`}
           </>
         </div>
       )}
