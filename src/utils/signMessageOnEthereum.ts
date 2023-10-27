@@ -1,7 +1,5 @@
 import { PhantomEthereumProvider } from '../scaffholding/types';
 import { getEthereumSelectedAddress } from './getEthereumSelectedAddress';
-import { ethers } from 'ethers';
-
 
 /**
  * Signs a message on Ethereum

@@ -100,8 +100,9 @@ export default function App() {
     try {
       const uint8array_encoded = new TextEncoder().encode(data_hex); //set the option
       const {signature} = await provider.signMessage(uint8array_encoded, 'hex');
-      console.log(signature);
-      //console.log(Buffer.from(signature).toString('hex'));
+      console.log("Type of signature: " + typeof(signature));
+      console.log("JSON.stringify of signature: " + JSON.stringify(signature));
+      console.log("Signature in hex: " + Buffer.from(signature).toString('hex'));
 
       /* Verify signature */
       //your solana public key in hex, use this to convert from base58 (solana deposit address) to hex:

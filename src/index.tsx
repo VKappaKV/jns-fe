@@ -6,12 +6,12 @@ import SolanaVerifier from "./SolanaVerifier";
 
 /* Phantom */
 
-ReactDOM.render(
+/*ReactDOM.render(
   <React.StrictMode>
     <App />
   </React.StrictMode>,
   document.getElementById('root')
-);
+);*/
 
 
 
@@ -22,5 +22,5 @@ ReactDOM.render(
 
 /* SolanaVerifier - backend test only */
 
-/*const rootElement = document.getElementById("root");
-render(<SolanaVerifier />, rootElement);*/
+const rootElement = document.getElementById("root");
+render(<SolanaVerifier />, rootElement);

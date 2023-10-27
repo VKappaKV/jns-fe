@@ -123,7 +123,8 @@ export const useProps = (provider: PhantomInjectedProvider | null): Props => {
             const { ethereum } = provider;
             try {
                 const signedMessage = await signMessageOnEthereum(ethereum, message);
-                console.log("Signed on Ethereum " + JSON.stringify(signedMessage));
+                console.log("Signed on Ethereum " + signedMessage);
+
                 return signedMessage;
             } catch (error) {
                 console.log("Error on Ethereum " + error.message);
