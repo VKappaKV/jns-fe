@@ -5,6 +5,7 @@
   "dependencies": {
     "@metamask/sdk-react": "^0.9.0",
     "assert": "^2.1.0",
+    "bn.js": "^5.2.1",
     "buffer": "^6.0.3",
     "crypto-js": "^4.2.0",
     "elliptic": "^6.5.4",

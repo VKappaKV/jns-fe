@@ -58,8 +58,6 @@ const App3 = () => {
 
             let signature = await web3.eth.personal.sign(inputFields.message, address, '');
 
-            signature=signature
-
             const r = '0x'+signature.slice(2).slice(0, 64);
             const s = '0x'+signature.slice(2).slice(64, 128);
             const v = '0x'+signature.slice(2).slice(128, 130);
@@ -72,7 +70,7 @@ const App3 = () => {
             //const r = '0x' + signatureBytes.slice(0, 32).toString('hex');
             //const s = '0x' + signatureBytes.slice(32, 64).toString('hex');
 
-            console.log(signature.length)
+            console.log('Signature length: ', signature.length)
             setValue('signature', {
                 sign: signature,
                 v,
@@ -80,7 +78,7 @@ const App3 = () => {
                 s
             })
 
-            console.log('Messaggio firmato:', signature);
+            console.log('Messaggio firmato: ', signature);
         } catch (error) {
             console.error('Errore nella firma del messaggio:', error);
         }
@@ -92,8 +90,9 @@ const App3 = () => {
             const messageBuffer = Buffer.from(inputFields.message, 'utf8');
             const messageHash = hashPersonalMessage(messageBuffer);
 
-            const signatureBuffer = toBuffer(inputFields.signature.sign)
-            const { v, r, s } = fromRpcSig(signatureBuffer);
+            const { v, r, s } = fromRpcSig(inputFields.signature.sign);
+
+            console.log("ECDSASignature", v,r,s)
             
             // Recover the public key
             const publicKey = ecrecover(messageHash, v, r, s);
@@ -101,10 +100,8 @@ const App3 = () => {
 
             let point = ec.curve.pointFromX(publicKey, true);
 
-
-            const x=point.x.toString('hex')            
-            const y=point.y.toString('hex')
-
+            const x=point.x.toString()
+            const y=point.y.toString()
 
             setValue('publicKey', {
                 key: publicKeyHex,
@@ -155,12 +152,31 @@ const App3 = () => {
         }
     }*/
 
+    async function verifyTest() {
+        const { v, r, s } = fromRpcSig(inputFields.signature.sign);
+
+        const messageBuffer = Buffer.from(inputFields.message, 'utf8');
+        const messageHash = hashPersonalMessage(messageBuffer);
+
+        const publicKey = ecrecover(messageHash, v, r, s);
+        const publicKeyHex = publicKey.toString('hex');
+
+        const isSignatureValid = ec.verify(inputFields.message, inputFields.signature.sign, publicKeyHex, 'hex');
+
+        if (isSignatureValid) {
+            setValue('verify', 'La firma è valida');
+        } else {
+            setValue('verify', 'La firma non è valida');
+        }
+    }
+
     return (
         <div>
             <button id="connectButton" onClick={connectToMetamask}>Connetti a Metamask</button>
             <button id="signButton" onClick={signMessage}>Firma Messaggio</button>
             <button id="geKeyButton" onClick={getKeys}>Prendi le chiavi</button>
             <button id="verifyButton" onClick={verifyECDSASignature}>Verifica Firma</button>
+            <button id="verifyTest" onClick={verifyTest}>Verify test</button>
             <p></p>
             <b>CONNECT:</b>
             <p></p>
