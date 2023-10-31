@@ -71,7 +71,7 @@ const App = () => {
 
   const getPublicKeyHex = async(account)=>{
     try {
-      const publicKey = await getPublicKey(account)
+      var publicKey = await getPublicKey(account)
 
       let publicKey_hex = [...atob(publicKey)].map(char => char.charCodeAt(0).toString(16).padStart(2, '0')).join('');
       console.log("Public key hex: " + publicKey_hex)
