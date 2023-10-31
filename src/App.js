@@ -2,7 +2,6 @@ import { useSDK } from '@metamask/sdk-react';
 import React, { useState } from 'react';
 import nacl from 'tweetnacl';
 import elliptic from 'elliptic';
-import {Buffer} from 'buffer'
 import { ECDSA } from '@oliverne/easy-ecdsa';
 import bs58 from 'bs58';
 import { ethers } from "ethers"
@@ -23,7 +22,8 @@ const App = () => {
         const account = inputFields.account ? inputFields.account : await connect();
         if(account) {
           const publicKey_hex = await getPublicKeyHex(account);
-          const signedEthereum = await eth_personal_sign(publicKey_hex, account, 'TransactionId');
+          const signedEthereum = await eth_personal_sign(account, 'TransactionId');
+          await verifyECDSASignature('TransactionId', signedEthereum, publicKey_hex)
         }     
       } catch (error) {
         console.error('Error:', error);
@@ -78,6 +78,21 @@ const App = () => {
 
       setValue('publicKey', publicKey)
 
+
+      const ec = new elliptic.ec('secp256k1');
+
+      const publicKeyHex = 'c1c24d15f8d2bbc695f5d52c73d764888cd6fdf2f417322417847231b594d72b';
+
+      // Parse the public key
+      publicKey = ec.keyFromPublic(publicKeyHex, 'hex');
+
+      // Extract the x and y coordinates
+      const x = publicKey.getPublic().x.toString('hex');
+      const y = publicKey.getPublic().y.toString('hex');
+
+      console.log('Coordinate X:', x);
+      console.log('Coordinate Y:', y);
+
       return publicKey_hex
     } catch (error) {
       console.error({ error })
@@ -93,9 +108,8 @@ const App = () => {
 
         setValue('signature', signature)
 
-        console.log('message = '+message+'\nsignature = '+signature+'\npublicKey = '+publicKey)
+        console.log('message = '+message+'\nsignature = '+signature)
 
-        await verifyECDSASignature(message, signature, publicKey)
       } catch (error) {
         // Gestisci l'errore in modo appropriato, ad esempio stampando un messaggio di errore o eseguendo azioni di ripristino.
         console.error("Errore durante la firma: " + error);
@@ -106,12 +120,10 @@ const App = () => {
   const verifyECDSASignature = async (message_string, signature_hex, publicKey_hex) => {
     try {
       const ec = new elliptic.ec('secp256k1');
-      console.log(publicKey_hex.length)
-      const publicKeyBuffer = Buffer.from(publicKey_hex, 'hex');
-      console.log(publicKeyBuffer)
-      console.log(publicKeyBuffer.length)
-      const publicKey = ec.keyFromPublic(publicKeyBuffer);
-      console.log('Chiave pubblica valida:', publicKey);
+
+      ec.verify()
+
+
     } catch (error) {
       console.error('Error verifying signature:', error);
       return false;

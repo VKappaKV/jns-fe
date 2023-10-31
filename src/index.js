@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App';
+import App3 from './App3';
 import { MetaMaskProvider } from '@metamask/sdk-react';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -17,7 +17,7 @@ root.render(
           url: window.location.host,
         }
       }}>
-      <App />
+      <App3 />
     </MetaMaskProvider>
   </React.StrictMode>
 );

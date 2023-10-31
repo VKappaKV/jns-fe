@@ -2,30 +2,36 @@
 
 
 CONNECT
-Account, in hex di 43 bytes, contando 0x
-
-
-PUBLIC KEY
-Da quello prendo la chiave pubblica con: 
-var publicKey = await window.ethereum.request({
-    method: 'eth_getEncryptionPublicKey',
-    params: [account],
-})
-
-Questo mi da la chiave pubblica in Base64 di 44 bytes, con l'uguale alla fine
+Account, in hex di 42 bytes, contando 0x
 
 
 FIRMA
 Per firmare ho bisogno di:
-- dell'account -> 43bytes con 0x iniziale
 - messaggio -> utf8, in string
+- address -> 42bytes con 0x iniziale
 
-const signature = await window.ethereum.request({
-    method: 'personal_sign',
-    params: [msg, account],
-});
+let signature = await web3.eth.personal.sign(inputFields.message, address, '');
 
 Questo mi da la signature in hex di 132 bytes con 0x iniziale
+
+Dal quale estraggo:
+- signature: 130, togliendo 0x
+- v: l'ultimo chr
+- r: i primi 32chr
+- s: i restando 32chr
+
+i tutti sono in hex senza 0x
+
+
+PUBLIC KEY
+Per prendere la chiave pubblica ho bisogno di:
+- messaggio -> utf8, in string
+- address -> 42bytes con 0x iniziale
+
+Da quello prendo la chiave pubblica con: 
+let publicKey = web3.eth.personal.sign(inputFields.message, address, '');
+
+Questo mi da la chiave pubblica in Base64 di 44 bytes, con l'uguale alla fine
 
 
 VERIFICA
