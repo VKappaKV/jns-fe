@@ -21,9 +21,10 @@ const App = () => {
       try {
         const account = inputFields.account ? inputFields.account : await connect();
         if(account) {
+          const message = "TransactionId";
           const publicKey_hex = await getPublicKeyHex(account);
-          const signedEthereum = await eth_personal_sign(account, 'TransactionId');
-          await verifyECDSASignature('TransactionId', signedEthereum, publicKey_hex)
+          const signedEthereum = await eth_personal_sign(account, message);
+          await verifyECDSASignature(message, signedEthereum, publicKey_hex)
         }     
       } catch (error) {
         console.error('Error:', error);
@@ -61,7 +62,7 @@ const App = () => {
          params: [account],
       })
 
-      console.log("Original public key: " + publicKey);
+      console.log("Encrypted public key: " + publicKey);
 
       return publicKey
     } catch (error) {
@@ -74,10 +75,9 @@ const App = () => {
       var publicKey = await getPublicKey(account)
 
       let publicKey_hex = [...atob(publicKey)].map(char => char.charCodeAt(0).toString(16).padStart(2, '0')).join('');
-      console.log("Public key hex: " + publicKey_hex)
+      console.log("Encrypted public key hex: " + publicKey_hex)
 
       setValue('publicKey', publicKey)
-
 
       const ec = new elliptic.ec('secp256k1');
 
@@ -99,7 +99,7 @@ const App = () => {
     }
   }
 
-  async function eth_personal_sign(publicKey, account, message) {
+  async function eth_personal_sign(account, message) {
       try {
         const signature = await window.ethereum.request({
           method: 'personal_sign',
@@ -111,9 +111,7 @@ const App = () => {
         console.log('message = '+message+'\nsignature = '+signature)
 
       } catch (error) {
-        // Gestisci l'errore in modo appropriato, ad esempio stampando un messaggio di errore o eseguendo azioni di ripristino.
         console.error("Errore durante la firma: " + error);
-        // Esempio: throw error; // Puoi anche lanciare l'errore se vuoi propagarlo
       }
   }
 
